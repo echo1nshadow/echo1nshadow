@@ -1,2 +1,3 @@
-# echo1nshadow
-##test page
+# 为了玩动森写的图片像素化
+## 顺便学习下python
+
