@@ -4,6 +4,7 @@ from PIL import Image
 import numpy
 import os
 import sys
+import getopt
 
 def open_pic(argv):
     im=Image.open(argv);
@@ -67,13 +68,32 @@ def pixelated_pic(im,block):
         i += block
     return new_arr
 
-if __name__=="__main__":
-    im=open_pic(sys.argv[1])
+
+def main(argv):
+    block = 1
+    src_name = ""
+    dest_name = ""
+    try:
+        opts,args = getopt.getopt(argv,"b:i:o:",["block="])
+    except getopt.GetoptError:
+        print("parse argv error")
+    for opt,arg in opts:
+        if opt == '-b':
+            block = int(arg)
+            print("block:%d"%block)
+        elif opt == '-o':
+            dest_name = arg
+            print(dest_name)
+        elif opt == '-i':
+            src_name = arg
+            print(src_name)
+
+    im=open_pic(src_name)
     arr = load_pic(im)
-
-    new_arr = pixelated_pic(im,20)
-
-    save_pic(new_arr,sys.argv[2])
+    new_arr = pixelated_pic(im,block)
+    save_pic(new_arr,dest_name)
 
 
+if __name__=="__main__":
+    main(sys.argv[1:])
 
