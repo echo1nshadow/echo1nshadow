@@ -49,7 +49,6 @@ def get_average_color(arr,x,y,block):
     r = round(r / ( block * block))
     g = round(g / ( block * block))
     b = round(b / ( block * block))
-    print(r,g,b)
     return tuple((r,g,b))
 
 def save_pic(arr,dest_name):
@@ -59,13 +58,20 @@ def pixelated_pic(im,block):
     arr=load_pic(im);
     i = 0;
     j = 0;
+    while( i < im.height ):
+        j = 0;
+        while( j < im.width ):
+            color_tuple = get_average_color(arr,i,j,block)
+            new_arr = color_pic(arr,i,j,block,color_tuple)
+            j += block
+        i += block
+    return new_arr
 
 if __name__=="__main__":
     im=open_pic(sys.argv[1])
     arr = load_pic(im)
 
-    color_tuple =  get_average_color(arr,800,100,100);
-    new_arr = color_pic(arr,800,100,100,color_tuple);
+    new_arr = pixelated_pic(im,20)
 
     save_pic(new_arr,sys.argv[2])
 
