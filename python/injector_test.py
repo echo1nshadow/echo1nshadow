@@ -16,8 +16,8 @@ if __name__ =="__main__":
     i = 0;
     send_msg(ser,"/1ZR\r\n");
     time.sleep(3);
-    while( i < 10000 ):
+    while( i < int(sys.argv[2])):
         print(i)
-        send_msg(ser,"/1IA500OA0R\r\n");
-        time.sleep(3);
+        send_msg(ser,"/1IA1500OA0R\r\n");
+        time.sleep(3.5);
         i += 1
