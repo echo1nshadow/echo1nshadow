@@ -1,5 +1,4 @@
-# 为了玩动森写的图片像素化
-## 顺便学习下python
+# 随手记录点东西
 
-1. numpy
-   pip3 install numpy -i https://pypi.doubanio.com/simple
+1. 豆瓣的源
+   pip3 install xxx -i https://pypi.doubanio.com/simple
