@@ -41,3 +41,20 @@
  - 定时器放在C++中
   
 5. **Qt 定时器**
+
+
+#### QML
+- qml控制小数点位数 toFixed()
+
+  eg: 两位小数使用 toFixed(2)
+  ```
+            TextField {
+                id: id_cfg_value
+                width: 200
+                text: model.value.toFixed(2)
+                font.pointSize: 12
+                onTextEdited: {
+                    model.value = parseFloat(id_cfg_value.text)
+                }
+            }
+  ```
