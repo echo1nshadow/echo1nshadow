@@ -58,3 +58,96 @@
                 }
             }
   ```
+
+- 报qt_metacast 之类的错
+  - 多继承只需要一个Q_OBJECT宏
+  - 也可能是没有把文件加入到工程中
+  
+- QML 读写文件
+
+  QML没有提供文件读写的接口, 需要使用C++来实现
+  ```
+  #ifndef FILE_OBJECT_H
+  #define FILE_OBJECT_H
+  #include <QObject>
+
+  class FileObject : public QObject
+  {
+      Q_OBJECT
+      Q_PROPERTY(QString source READ source WRITE setSource NOTIFY sourceChanged)
+  public:
+      explicit FileObject() {};
+      ~FileObject() {};
+
+      Q_INVOKABLE QString read();
+      Q_INVOKABLE bool write(const QString& data);
+      
+    Q_INVOKABLE void setSource(const QString& source) { m_source = source; };
+      QString source() { return m_source; }
+      
+  signals:
+      void sourceChanged(const QString& source);
+
+  private:
+      QString m_source;
+  };
+
+  #endif // FILE_OBJECT_H
+  ```
+
+  ```
+  #include "FileObject.h"
+
+  #include <QFile>
+  #include <QTextStream>
+
+  /*
+  FileObject::FileObject(QObject *parent) :
+      QObject(parent)
+  {
+
+  }
+  */
+
+  QString FileObject::read()
+  {
+    QString content;
+      QFile file(m_source);
+      if ( file.open(QIODevice::ReadOnly) ) {
+        content = file.readAll();
+          file.close();
+      } 
+      
+      return content;
+  }
+
+  bool FileObject::write(const QString& data)
+  {
+      QFile file(m_source);
+      if ( file.open(QFile::WriteOnly | QFile::Truncate) ) {
+          QTextStream out(&file);
+        out<<data;
+        file.close();
+        return true;
+      }
+      else {
+        return false;
+      }
+  }
+  ```
+
+  在 main.cpp 注册这个文件读写类
+  ```
+  qmlRegisterType<FileObject>("Coruitech.device",1,0,"FileObject")
+  ```
+
+  QML中导入并使用
+  ```
+  import Coruitech.device 1.0
+
+  FileObject{
+      id: fileObject
+  }
+  fileObject.setSource(id_folderlistmode.get(comboBox.currentIndex,"filePath"))
+  var text = fileObject.read()
+  ```  
