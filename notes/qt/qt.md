@@ -1,4 +1,4 @@
-#### Qt
+#### Qt编译问题
 1. **ASSERT: "!"No style available without QApplication!**
 - 解决方法
   .pro文件添加 QT += charts qml quick
@@ -6,7 +6,33 @@
 - 原因
   QApplication 继承自QGuiApplication ，对于有继承基本Qt widgets的 需要用QApplication，而ChartView来自于Qt widgets
 
-2. **如何实现动态曲线**
+2. Q_INVOKABLE 定义的函数必须有参数
+
+3. 如果在其他编辑器中新增了文件, 编译出错可能是没有加入到编译工程中
+
+
+
+#### QML/Qt
+- qml控制小数点位数 toFixed()
+
+  eg: 两位小数使用 toFixed(2)
+  ```
+            TextField {
+                id: id_cfg_value
+                width: 200
+                text: model.value.toFixed(2)
+                font.pointSize: 12
+                onTextEdited: {
+                    model.value = parseFloat(id_cfg_value.text)
+                }
+            }
+  ```
+
+- 报qt_metacast 之类的错
+  - 多继承只需要一个Q_OBJECT宏
+  - 也可能是没有把文件加入到工程中
+
+- 如何实现动态曲线
   - 定义一个变量来保存时间, x轴的min/max值根据这个变量生成
     ```
       property int timer: 0
@@ -35,34 +61,7 @@
     ```
     **qml绘图cpu占用极高, 待解决**
 
-3. **如何从C++向QML中添加曲线**
-   
-4. **QML绘图卡顿问题**
- - 定时器放在C++中
-  
-5. **Qt 定时器**
-
-
-#### QML
-- qml控制小数点位数 toFixed()
-
-  eg: 两位小数使用 toFixed(2)
-  ```
-            TextField {
-                id: id_cfg_value
-                width: 200
-                text: model.value.toFixed(2)
-                font.pointSize: 12
-                onTextEdited: {
-                    model.value = parseFloat(id_cfg_value.text)
-                }
-            }
-  ```
-
-- 报qt_metacast 之类的错
-  - 多继承只需要一个Q_OBJECT宏
-  - 也可能是没有把文件加入到工程中
-  
+ 
 - QML 读写文件
 
   QML没有提供文件读写的接口, 需要使用C++来实现
@@ -151,3 +150,11 @@
   fileObject.setSource(id_folderlistmode.get(comboBox.currentIndex,"filePath"))
   var text = fileObject.read()
   ```  
+
+- 文件路径的截取
+  1. 使用```FileDialog```获取到的路径是类似```file:///xxxxx```, 需要将```file:///```截掉
+  2. 使用QStirng的函数section来完成, section可以使用正则表达式
+      ``` QString file_path = localPath.section(QRegExp("///"), 1);```
+      表示截取```///```后面的部分
+
+- 
