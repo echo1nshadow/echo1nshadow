@@ -157,4 +157,30 @@
       ``` QString file_path = localPath.section(QRegExp("///"), 1);```
       表示截取```///```后面的部分
 
-- 
+- Qt5中没有QFtp的解决方法(下载qftp代码编译动态库并部署)
+  1. 下载QFtp源代码(https://github.com/qt/qtftp)
+  2. 编译
+  点击修改pro文件
+  ![修改pro](img/img/qftp_modifiy_pro.png)
+  只保留src文件夹的编译即可
+  ![修改pro](img/qftp_modifiy_pro_2.png)
+  修改编译选项```qtftp\src\qftp\ftp.pro```
+  ![修改pro](img/qftp_modifiy_pro_3.png)
+  修改文件```src/qftp/qftp.h```
+  ![修改文件](img/qftp_modifiy_ftph.png)
+  编译完成后会在目录下生成动态库静态库文件
+  ![文件](img/qftp_lib.png)
+  3. 部署
+      1. 将动态库（.dll文件）拷贝至qt的bin文件夹下
+      ![dll](img/qt_dll.png)
+      2. 将静态库（.a文件）及.prl文件拷贝至qt的lib文件夹下
+      ![lib](img/qt_lib.png)
+      ![prl](img/qt_prl.png)
+      3. 将构建目录下/include/目录下的 QtFtp文件夹拷贝至Qt的include目录下,将```src/qftp/```下的两个头文件拷贝至此
+      ![header](img/qt_header.png)
+      4. 在该目录下创建一个文件```QFtp```注意**没有扩展名**, 并在其中写上```#include"qftp.h"```
+      ![file](img/qt_file.png)
+      5. 将构建目录下文件 ```\mkspecs\modules-inst\qt_lib_ftp.pri```拷贝至 Qt 目录下的```mkspecs\modules```
+      ![lib_pri](img/qt_lib_pri.png)
+      6. 在项目的 .pro文件添加```QT    +=   ftp```
+      ![pro](img/qt_pro.png)
