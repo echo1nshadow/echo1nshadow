@@ -184,3 +184,5 @@
       ![lib_pri](img/qt_lib_pri.png)
       6. 在项目的 .pro文件添加```QT    +=   ftp```
       ![pro](img/qt_pro.png)
+    4. **注意**
+        1. QFtp 上传文件时```dataTransferProgress```信号似乎不能准确反映上传进度, 总是一开始就返回已全部传输完成. 如果使用```put(QIODevice * dev, const QString & file, TransferType type = Binary)```接口不会出现这样的情况
