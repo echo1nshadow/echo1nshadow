@@ -161,7 +161,7 @@
   1. 下载QFtp源代码(https://github.com/qt/qtftp)
   2. 编译
   点击修改pro文件
-  ![修改pro](img/img/qftp_modifiy_pro.png)
+  ![修改pro](img/qftp_modifiy_pro.png)
   只保留src文件夹的编译即可
   ![修改pro](img/qftp_modifiy_pro_2.png)
   修改编译选项```qtftp\src\qftp\ftp.pro```
@@ -186,3 +186,15 @@
       ![pro](img/qt_pro.png)
     4. **注意**
         1. QFtp 上传文件时```dataTransferProgress```信号似乎不能准确反映上传进度, 总是一开始就返回已全部传输完成. 如果使用```put(QIODevice * dev, const QString & file, TransferType type = Binary)```接口不会出现这样的情况
+
+- Qt中延时
+  ```
+  void QSleepTimeSet::Delay_MSec(unsigned int msec)
+  {
+    QTime _Timer = QTime::currentTime().addMSecs(msec);
+    while( QTime::currentTime() < _Timer )
+    {
+      QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    }
+  }
+  ```
