@@ -9,7 +9,7 @@
 #### 可能有点用的程序
 - ```file```
   file 命令用于分析文件的类型
-  如果需要分析二进制文件, 可以首先使用 ```file``` 命令来切入, 在 Linux 下,一切皆文件，但并不是所有的文件都具有可执行性,可以先使用 file 命令来分析它们的类型
+  如果需要分析二进制文件, 可以首先使用 ```file``` 命令来切入, 在 Linux 下,一切皆文件,但并不是所有的文件都具有可执行性,可以先使用 file 命令来分析它们的类型
   ```
   echo@XiongJie:~/tools$ file calc_ftp_port
   calc_ftp_port: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[sha1]=808488520c60bf877aa5d4ffb1d3035301c43bc3, not stripped

@@ -4,7 +4,7 @@
   .pro文件添加 QT += charts qml quick
   将 QGuiApplication app(argc, argv); 修改为QApplication app(argc, argv); **记得修改头文件引用**
 - 原因
-  QApplication 继承自QGuiApplication ，对于有继承基本Qt widgets的 需要用QApplication，而ChartView来自于Qt widgets
+  QApplication 继承自QGuiApplication ,对于有继承基本Qt widgets的 需要用QApplication,而ChartView来自于Qt widgets
 
 2. Q_INVOKABLE 定义的函数必须有参数
 
@@ -197,4 +197,31 @@
       QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     }
   }
+  ```
+
+- C++ 的lambda表达式
+  lambda 表达式定义了一个匿名函数,并且可以捕获一定范围内的变量,lambda 表达式的语法形式可简单归纳如下:
+  ```[ capture ] ( params ) opt -> ret { body; };```
+  capture 是捕获列表,params 是参数表,opt 是函数选项,ret 是返回值类型,body是函数体
+
+  在lambda表达式中, 捕获的参数默认是不可变的, 编译时会报错
+    ```Cannot assign to a variable captured by copy in a non-mutable lambda```
+    eg:
+    ```
+    connect(reply, &QModbusReply::finished, this,[this,state,reply]()
+    {
+      .
+      .
+      .
+    });
+    ```
+  使用关键字```mutable```,将参数改为可变的
+  eg:
+  ```
+  connect(reply, &QModbusReply::finished, this,[this,state,reply]() mutable
+  {
+    .
+    .
+    .
+  });
   ```
