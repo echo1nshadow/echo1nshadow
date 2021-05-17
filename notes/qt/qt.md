@@ -171,9 +171,9 @@
   编译完成后会在目录下生成动态库静态库文件
   ![文件](img/qftp_lib.png)
   3. 部署
-      1. 将动态库（.dll文件）拷贝至qt的bin文件夹下
+      1. 将动态库(.dll文件)拷贝至qt的bin文件夹下
       ![dll](img/qt_dll.png)
-      2. 将静态库（.a文件）及.prl文件拷贝至qt的lib文件夹下
+      2. 将静态库(.a文件)及.prl文件拷贝至qt的lib文件夹下
       ![lib](img/qt_lib.png)
       ![prl](img/qt_prl.png)
       3. 将构建目录下/include/目录下的 QtFtp文件夹拷贝至Qt的include目录下,将```src/qftp/```下的两个头文件拷贝至此
