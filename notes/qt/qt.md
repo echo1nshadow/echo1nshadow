@@ -6,7 +6,7 @@
 - 原因
   QApplication 继承自QGuiApplication ,对于有继承基本Qt widgets的 需要用QApplication,而ChartView来自于Qt widgets
 
-2. Q_INVOKABLE 定义的函数必须有参数
+2. ~~Q_INVOKABLE 定义的函数必须有参数~~
 
 3. 如果在其他编辑器中新增了文件, 编译出错可能是没有加入到编译工程中
 
@@ -227,4 +227,20 @@
   });
   ```
   - lambda表达式 返回值的问题
-  
+
+- connect的连接类型
+  - Qt::AutoConnection
+    - 默认连接类型
+    - 如果信号发送者和接受者在同一线程则会使用```Qt::UniqueConnection```, 否则会使用```Qt::UniqueConnection```
+    - 连接类型是在信号触发(emitted)时确定
+  - Qt::DirectConnection
+    - 信号触发时, 槽函数立即被调用
+    - 槽函数在信号发送者的线程中执行
+  - Qt::QueuedConnection
+    - 信号触发后, 回到接受者的事件循环中槽函数才被调用
+    - 槽函数在信号接受者的线程中执行
+  - Qt::BlockingQueuedConnection
+    - 除了发送者线程会阻塞直到槽函数返回外, 其他和```Qt::BlockingQueuedConnection```一样
+    - **不能在同一个线程中使用这种连接方式, 否则会造成死锁**
+  - Qt::UniqueConnection
+    - 保证连接唯一的 flag , 可以和上面的几种组合
