@@ -1,8 +1,22 @@
 #### stm32cubemx
 1. 
 
-#### FreeRTOS移植
-1. 
+#### uCos
+1. 内存管理
+  - uCos 将存储区域分成**区**和**块**, 每个存储区有数量不等大小相同的存储块, 系统中可存在多个存储区
+  - 内存分区、内存块的使用情况由**内存控制块**来记录
+    ```
+    typedef struct os_mem {           /* MEMORY CONTROL BLOCK                                    */
+    void   *OSMemAddr;                /* Pointer to beginning of memory partition                */
+    void   *OSMemFreeList;            /* Pointer to list of free memory blocks                   */
+    INT32U  OSMemBlkSize;             /* Size (in bytes) of each block of memory                 */
+    INT32U  OSMemNBlks;               /* Total number of blocks in this partition                */
+    INT32U  OSMemNFree;               /* Number of memory blocks remaining in this partition     */
+    #if OS_MEM_NAME_EN > 0u
+    INT8U  *OSMemName;                /* Memory partition name                                   */
+    #endif
+    } OS_MEM;
+    ```
 
 #### 电路方面的知识
 1. 开漏输出与推挽输出
@@ -42,3 +56,6 @@
 
 - GPIO的复用
   复用:作为I2C,SPI,USART等通讯接口
+
+2. 时钟
+  - PLL电路(PhaseLockedLoop)

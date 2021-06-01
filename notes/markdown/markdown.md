@@ -11,3 +11,9 @@
   ~~Q_INVOKABLE 定义的函数必须有参数~~
   ```
   ~~Q_INVOKABLE 定义的函数必须有参数~~
+
+- PDF分页
+  ```
+  <div STYLE="page-break-after: always;"></div>
+  ```
+  前后再添个空行
