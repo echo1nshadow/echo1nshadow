@@ -19,6 +19,44 @@
     ```
     **OSMemAddr**是指向内存分区起始地址的指针, 它在建立内存分区```OSMemCreate()```时被初始化, 此后不能再更改
     **OSMemFreeList**是指向下一个空闲内存控制块或者下一个空闲的内存块的指针
+    **OSMemBlkSize**是内存分区中内存块的大小, 是用户建立该内存分区时指定的
+    **OSMemNBlks**是内存分区中总的内存块数量, 也是用户建立该内存分区时指定的
+    **OSMemNFree**是内存分区中当前可以得空闲内存块数量
+  - 使用内存需经过以下步骤:
+    1. 建立一个内存分区 OSMemCreate()
+    2. 调用OSMemGet()函数从已经建立的内存分区中申请内存块
+    3. 当用户应用程序不再使用一个内存块时, 调用OSMemPut()释放内存
+    4. 在这过程中可以调用OSMemQuery()查询一个内存分区的状态
+  - 内存分区的创建
+    ```
+      INT8U     *pblk;
+      void     **plink
+
+      plink = (void **)addr;                /* Create linked list of free memory blocks      */
+      pblk  = (INT8U *)addr;
+      loops  = nblks - 1u;
+      for (i = 0u; i < loops; i++) 
+      {
+        pblk +=  blksize;                   /* Point to the FOLLOWING block                  */
+       *plink = (void  *)pblk;              /* Save pointer to NEXT block in CURRENT block   */
+        plink = (void **)pblk;              /* Position to  NEXT block                  */
+      }
+      *plink              = (void *)0;      /* Last memory block points to NULL              */
+    ```
+    addr 是内存分区的起始地址
+    plink 是指向void指针的指针
+    pblk 用于按 blksize 递增划分区域
+    ```*plink = (void  *)pblk;``` 将下一个内存块的地址保存在当前内存块的首地址空间中.
+
+  - 内存的分配与回收
+    - OSMemGet()
+      ```
+        pblk                = pmem->OSMemFreeList;    /* point to next free memory block          */
+        pmem->OSMemFreeList = *(void **)pblk;         /* Adjust pointer to new free list          */
+        pmem->OSMemNFree--;                           /* One less memory block in this partition  */
+      ```
+      从pmem中获取空闲的内存块, 并取得这个空闲内存块指向的下一个空闲内存块加入到pmem的链表中, 返回pblk
+    - OSMemPut()
 
 #### 电路方面的知识
 1. 开漏输出与推挽输出

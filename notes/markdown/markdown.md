@@ -17,3 +17,9 @@
   <div STYLE="page-break-after: always;"></div>
   ```
   前后再添个空行
+
+- pandoc
+  安装pandoc
+  ```
+  sudo apt-get install pandoc pandoc-citeproc texlive
+  ```
