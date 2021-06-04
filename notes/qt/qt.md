@@ -1,3 +1,10 @@
+#### 获取Qt源码
+```
+$ git clone https://code.qt.io/qt/qt5.git                     # cloning the repo
+$ cd qt5
+$ git checkout v5.8.0                                         # checking out the specific release or branch
+$ git submodule update --init --recursive                     # updating each submodule to match the supermodule
+```
 #### Qt编译问题
 1. **ASSERT: "!"No style available without QApplication!**
 - 解决方法
