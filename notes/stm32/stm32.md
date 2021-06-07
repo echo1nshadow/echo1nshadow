@@ -58,6 +58,126 @@
       从pmem中获取空闲的内存块, 并取得这个空闲内存块指向的下一个空闲内存块加入到pmem的链表中, 返回pblk
     - OSMemPut()
 
+2. 任务调度
+  - 任务调度中的就绪表由两部分组成: ```OSRdyGrp```和```OSRdyTbl[]```
+  - 优先级计算
+    ```
+      y = OSUnMapTbl[OSRdyGrp];-----------(1)
+      x = OSUnMapTbl[OSRdyTbl[x]];--------(2)
+      prio = (y << 3) + x;----------------(3)
+    ```
+  - 任务挂起
+  - 任务恢复
+  - 寻找优先级最高的就绪任务
+    ```
+      /*
+      *********************************************************************************************************
+      *                               FIND HIGHEST PRIORITY TASK READY TO RUN
+      *
+      * Description: This function is called by other uC/OS-II services to determine the highest priority task
+      *              that is ready to run.  The global variable 'OSPrioHighRdy' is changed accordingly.
+      *
+      * Arguments  : none
+      *
+      * Returns    : none
+      *
+      * Notes      : 1) This function is INTERNAL to uC/OS-II and your application should not call it.
+      *              2) Interrupts are assumed to be disabled when this function is called.
+      *********************************************************************************************************
+      */
+
+      static  void  OS_SchedNew (void)
+      {
+      #if OS_LOWEST_PRIO <= 63u                        /* See if we support up to 64 tasks                   */
+          INT8U   y;
+
+
+          y             = OSUnMapTbl[OSRdyGrp];
+          OSPrioHighRdy = (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]);
+      #else                                            /* We support up to 256 tasks                         */
+          INT8U     y;
+          OS_PRIO  *ptbl;
+
+
+          if ((OSRdyGrp & 0xFFu) != 0u) {
+              y = OSUnMapTbl[OSRdyGrp & 0xFFu];
+          } else {
+              y = OSUnMapTbl[(OS_PRIO)(OSRdyGrp >> 8u) & 0xFFu] + 8u;
+          }
+          ptbl = &OSRdyTbl[y];
+          if ((*ptbl & 0xFFu) != 0u) {
+              OSPrioHighRdy = (INT8U)((y << 4u) + OSUnMapTbl[(*ptbl & 0xFFu)]);
+          } else {
+              OSPrioHighRdy = (INT8U)((y << 4u) + OSUnMapTbl[(OS_PRIO)(*ptbl >> 8u) & 0xFFu] + 8u);
+          }
+      #endif
+      }
+    ```
+    ```OS_SchedNew()``` 函数在三种情况下被调用:
+    1. ```OSStart()``` 当系统开始进行任务调度时
+    2. ```OSIntExit()``` 当系统执行完最后一个中断函数(ISR)时
+    3. ```OS_Sched()``` uCos 本身进行任务调度
+    ```OS_SchedNew()```中计算得出的```OSPrioHighRdy```在```OS_CPU_PendSVHandler(void)```中被使用
+  - OS_CPU_PendSVHandler()
+    ```
+    OS_CPU_PendSVHandler:
+      CPSID   I                                   @ Prevent interruption during context switch
+      MRS     R0, PSP                             @ PSP is process stack pointer
+      CBZ     R0, OS_CPU_PendSVHandler_nosave     @ Skip register save the first time
+
+      SUBS    R0, R0, #0x20                       @ Save remaining regs r4-11 on process stack
+      STM     R0, {R4-R11}
+
+      LDR     R1, =OSTCBCur                       @ OSTCBCur->OSTCBStkPtr = SP;
+      LDR     R1, [R1]
+      STR     R0, [R1]                            @ R0 is SP of process being switched out
+
+                                                  @ At this point, entire context of process has been saved
+    OS_CPU_PendSVHandler_nosave:
+      PUSH    {R14}                               @ Save LR exc_return value
+      LDR     R0, =OSTaskSwHook                   @ OSTaskSwHook();
+      BLX     R0
+      POP     {R14}
+
+      LDR     R0, =OSPrioCur                      @ OSPrioCur = OSPrioHighRdy;
+      LDR     R1, =OSPrioHighRdy
+      LDRB    R2, [R1]
+      STRB    R2, [R0]
+
+      LDR     R0, =OSTCBCur                       @ OSTCBCur  = OSTCBHighRdy;
+      LDR     R1, =OSTCBHighRdy
+      LDR     R2, [R1]
+      STR     R2, [R0]
+
+      LDR     R0, [R2]                            @ R0 is new process SP; SP = OSTCBHighRdy->OSTCBStkPtr;
+      LDM     R0, {R4-R11}                        @ Restore r4-11 from new process stack
+      ADDS    R0, R0, #0x20
+      MSR     PSP, R0                             @ Load PSP with new process SP
+      ORR     LR, LR, #0xF4                       @ Ensure exception return uses process stack
+      CPSIE   I
+      BX      LR                                  @ Exception return will restore remaining context
+    ```
+    注意:
+    1. PendSV 是被用来引起一次上下文切换的. 这是 Cortex-M4 推荐的触发上下文切换的方法.
+       Cortex-M4 会在进入任何时自动保存一半的上下文环境, 并且会在从异常返回时自动恢复, 所以只需要保存 R4-R11 寄存器以及处理栈指针.
+       这样使用 PendSV 意味着不管是在线程中或是在异常、中断中启动, 上下文的保存和恢复是完全一样的.
+    2. 伪代码
+      a) 获取 PSP 寄存器, 如果为 0 则跳过保存环节, 执行 d 步骤
+      b) 保存进程栈中的 R4-R11 寄存器
+      c) 将进程栈指针保存在它的 TCB 中, OSTCBCur->OSTCBStkPtr = SP
+      d) 调用```OSTaskSwHook()```, 这个函数允许你在上下文切换的时候做其他的操作
+      e) 获取当前最高优先级, OSPrioCur = OSPrioHighRdy
+      f) 获取就绪状态线程的 TCB, OSTCBCur = OSTCBHighRdy
+      g) 从 TCB 中获取新的 PSP, SP = OSTCBHighRdy->OSTCBStkPtr
+      h) 从新的进程栈中恢复 R4-R11
+      i) 执行异常返回, 恢复剩余的上下文环境
+
+#### Cortex-M4常见的汇编
+1. CPSID/CPSIE 快速的开关中断
+   CPSID I    @关闭中断 ,  I -- IRQ
+   CPSIE I    @打开中断 
+   CPSID F    @关闭快速中断 F -- FIQ 快速中断
+   CPSIE F    @打开快速中断 
 #### 电路方面的知识
 1. 开漏输出与推挽输出
   - 推挽输出
