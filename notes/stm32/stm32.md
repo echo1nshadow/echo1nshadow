@@ -62,8 +62,27 @@
   - 任务调度中的就绪表由两部分组成: ```OSRdyGrp```和```OSRdyTbl[]```
   - 优先级计算
     ```
+      这个表本质上是在描述 0x0~0xff 这256个数最低有效位的位置
+      INT8U  const  OSUnMapTbl[256] = {
+          0u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x00 to 0x0F                   */
+          4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x10 to 0x1F                   */
+          5u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x20 to 0x2F                   */
+          4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x30 to 0x3F                   */
+          6u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x40 to 0x4F                   */
+          4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x50 to 0x5F                   */
+          5u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x60 to 0x6F                   */
+          4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x70 to 0x7F                   */
+          7u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x80 to 0x8F                   */
+          4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x90 to 0x9F                   */
+          5u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0xA0 to 0xAF                   */
+          4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0xB0 to 0xBF                   */
+          6u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0xC0 to 0xCF                   */
+          4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0xD0 to 0xDF                   */
+          5u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0xE0 to 0xEF                   */
+          4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u  /* 0xF0 to 0xFF                   */
+      };
       y = OSUnMapTbl[OSRdyGrp];-----------(1)
-      x = OSUnMapTbl[OSRdyTbl[x]];--------(2)
+      x = OSUnMapTbl[OSRdyTbl[y]];--------(2)
       prio = (y << 3) + x;----------------(3)
     ```
   - 任务挂起
@@ -88,29 +107,9 @@
 
       static  void  OS_SchedNew (void)
       {
-      #if OS_LOWEST_PRIO <= 63u                        /* See if we support up to 64 tasks                   */
           INT8U   y;
-
-
           y             = OSUnMapTbl[OSRdyGrp];
           OSPrioHighRdy = (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]);
-      #else                                            /* We support up to 256 tasks                         */
-          INT8U     y;
-          OS_PRIO  *ptbl;
-
-
-          if ((OSRdyGrp & 0xFFu) != 0u) {
-              y = OSUnMapTbl[OSRdyGrp & 0xFFu];
-          } else {
-              y = OSUnMapTbl[(OS_PRIO)(OSRdyGrp >> 8u) & 0xFFu] + 8u;
-          }
-          ptbl = &OSRdyTbl[y];
-          if ((*ptbl & 0xFFu) != 0u) {
-              OSPrioHighRdy = (INT8U)((y << 4u) + OSUnMapTbl[(*ptbl & 0xFFu)]);
-          } else {
-              OSPrioHighRdy = (INT8U)((y << 4u) + OSUnMapTbl[(OS_PRIO)(*ptbl >> 8u) & 0xFFu] + 8u);
-          }
-      #endif
       }
     ```
     ```OS_SchedNew()``` 函数在三种情况下被调用:
@@ -129,7 +128,7 @@
       STM     R0, {R4-R11}
 
       LDR     R1, =OSTCBCur                       @ OSTCBCur->OSTCBStkPtr = SP;
-      LDR     R1, [R1]
+      LDR     R1, [R1]                            @echo1nshadow 注: OSTCBCur结构体的第一个成员即为当前任务栈指这里是获取到OSTCBCur的地址后,从该地址取第一个32位值出来, 即 R1 为 OSTCBCur->OSTCBStkPtr
       STR     R0, [R1]                            @ R0 is SP of process being switched out
 
                                                   @ At this point, entire context of process has been saved
@@ -154,6 +153,7 @@
       ADDS    R0, R0, #0x20
       MSR     PSP, R0                             @ Load PSP with new process SP
       ORR     LR, LR, #0xF4                       @ Ensure exception return uses process stack
+                                                  @ 进程栈最低两位永远为 0
       CPSIE   I
       BX      LR                                  @ Exception return will restore remaining context
     ```
@@ -161,23 +161,61 @@
     1. PendSV 是被用来引起一次上下文切换的. 这是 Cortex-M4 推荐的触发上下文切换的方法.
        Cortex-M4 会在进入任何时自动保存一半的上下文环境, 并且会在从异常返回时自动恢复, 所以只需要保存 R4-R11 寄存器以及处理栈指针.
        这样使用 PendSV 意味着不管是在线程中或是在异常、中断中启动, 上下文的保存和恢复是完全一样的.
-    2. 伪代码
-      a) 获取 PSP 寄存器, 如果为 0 则跳过保存环节, 执行 d 步骤
-      b) 保存进程栈中的 R4-R11 寄存器
-      c) 将进程栈指针保存在它的 TCB 中, OSTCBCur->OSTCBStkPtr = SP
-      d) 调用```OSTaskSwHook()```, 这个函数允许你在上下文切换的时候做其他的操作
-      e) 获取当前最高优先级, OSPrioCur = OSPrioHighRdy
-      f) 获取就绪状态线程的 TCB, OSTCBCur = OSTCBHighRdy
-      g) 从 TCB 中获取新的 PSP, SP = OSTCBHighRdy->OSTCBStkPtr
-      h) 从新的进程栈中恢复 R4-R11
-      i) 执行异常返回, 恢复剩余的上下文环境
+    2. 伪代码(Pseudo-code)
+       1. 获取 PSP 寄存器, 如果为 0 则跳过保存环节, 执行步骤 4
+       2. 保存进程栈中的 R4-R11 寄存器
+       3. 将进程栈指针保存在它的 TCB 中, OSTCBCur->OSTCBStkPtr = SP
+       4. 调用```OSTaskSwHook()```, 这个函数允许你在上下文切换的时候做其他的操作(保存浮点寄存器)
+       5. 获取当前最高优先级, OSPrioCur = OSPrioHighRdy
+       6. 获取就绪状态线程的 TCB, OSTCBCur = OSTCBHighRdy
+       7. 从 TCB 中获取新的 PSP, SP = OSTCBHighRdy->OSTCBStkPtr
+       8. 从新的进程栈中恢复 R4-R11
+       9. 执行异常返回, 恢复剩余的上下文环境
+    3. 当进入 PendSV handler 时:
+       1. xPSR, PC, LR, R12, R0-R3 保存到栈中
+       2. 处理器模式由线程模式切换到 handler 模式
+       3. 栈由进程栈切换到主栈
+       4. ```OSTCBCur``` 指向即将被挂起的任务 TCB,
+          ``` OSTCBHighRdy``` 指向将被恢复执行的任务 TCB
+    4. 由于 PendSv 被系统设置为最低优先级, 我们知道仅当没有其他异常或中断处于活动状态时才会运行, 所以可以假设上下文切换时使用的是进程栈(PSP)
 
+3. uCOS 如何保证实时性
+   
 #### Cortex-M4常见的汇编
-1. CPSID/CPSIE 快速的开关中断
+1. 条件标志/更新条件标志
+  - 条件标志|置位/清除
+   ---    | ---
+   N      | 当运算的结果为负数的话置位, 其余情况清0
+   Z      | 当运算的结果为 0 的话置位, 其余情况清0
+   C      | 当运算的结果产生进位或者减法运算没有借位的话置位, 其余情况清0
+   V      | 当运算的结果产生溢出的话置位, 其余情况清0
+  - 更新条件标志 S
+   条件标志大部分情况下, 不会自动更新到 CPSR 中, 只有指令明确需要更新条件标志才会更新
+2. CPSID/CPSIE 快速的开关中断
    CPSID I    @关闭中断 ,  I -- IRQ
    CPSIE I    @打开中断 
    CPSID F    @关闭快速中断 F -- FIQ 快速中断
    CPSIE F    @打开快速中断 
+3. CBZ/CBNZ
+   ```CBZ Rn, <label>```
+   如果 R<sub>n</sub>为 0 则跳转到```<lable>```标号
+   ```CBNZ Rn, <label>```
+   如果 R<sub>n</sub>不为 0 则跳转到```<lable>```标号
+4. SUB
+   SUBS R0, R1, R2;   @ R0 = R1 - R2  // SUB**S** 意味着要主动更新条件标志, R1 - R2 没有发生借位则 C 置位, 有则 C 清零
+5. MRS/MSR
+   MRS: 状态寄存器到通用寄存器的传送指令
+   MSR: 通用寄存器到状态寄存器的传送指令
+6. LDR/STR
+   LDR{条件}  目的寄存器, <存储器地址>
+   eg:
+      LDR R0，[R1]         ;将存储器地址为R1的字数据读入寄存器R0
+   STR{条件}  源寄存器, <存储器地址>
+   eg:
+      STR R0, [R1],#8      ;将R0中的字数据写入以R1为地址的存储器中,并将新地址R1＋8写入R1
+7. STM/LDM
+   
+
 #### 电路方面的知识
 1. 开漏输出与推挽输出
   - 推挽输出
