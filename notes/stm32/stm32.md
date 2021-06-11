@@ -128,7 +128,8 @@
       STM     R0, {R4-R11}
 
       LDR     R1, =OSTCBCur                       @ OSTCBCur->OSTCBStkPtr = SP;
-      LDR     R1, [R1]                            @echo1nshadow 注: OSTCBCur结构体的第一个成员即为当前任务栈指这里是获取到OSTCBCur的地址后,从该地址取第一个32位值出来, 即 R1 为 OSTCBCur->OSTCBStkPtr
+      LDR     R1, [R1]                            @echo1nshadow 注: OSTCBCur结构体的第一个成员即为当前任务栈指这里是获取到OSTCBCur的地址后,
+                                                   从该地址取第一个32位值出来, 即 R1 为 OSTCBCur->OSTCBStkPtr
       STR     R0, [R1]                            @ R0 is SP of process being switched out
 
                                                   @ At this point, entire context of process has been saved
