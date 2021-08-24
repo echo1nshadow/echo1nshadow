@@ -280,6 +280,10 @@
    - 频率
        f<sub>timer</sub> = f<sub>APB</sub> / (PRESCALER + 1) / (ARR+ 1)
           
+6. SPI
+   SPI1 -- APB2 -- 最高42MHz
+   SPI2/SPI3 -- APB1 -- 最高21MHz
+
 7. LCD
   - MCU-LCD屏它与RGB-LCD屏主要区别在于显存的位置：
         RGB-LCD的显存是由系统内存充当的,因此其大小只受限于系统内存的大小,这样RGB-LCD可以做出较大尺寸,象现在4.3"只能算入门级,而MID中7",10"的屏都开始大量使用.
