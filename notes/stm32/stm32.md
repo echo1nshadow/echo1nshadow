@@ -226,6 +226,7 @@
     开漏输出和推挽输出的区别最普遍的说法就是开漏输出无法真正输出高电平,即高电平时没有驱动能力,需要借助外部上拉电阻完成对外驱动
 
 2. V<sub>S</sub><sub>S</sub>/V<sub>D</sub><sub>D</sub>/V<sub>C</sub><sub>C</sub>
+
 - V<sub>S</sub><sub>S</sub>
   表示公共连接的意思, 通常指电路公共接地端电压
 - V<sub>D</sub><sub>D</sub>
@@ -233,15 +234,16 @@
 - V<sub>C</sub><sub>C</sub>
   表示电路的意思, 即接入电路的电压
 
-3. 三极管
+3.三极管
 
-4. 上拉/下拉
+4.上拉/下拉
   GPIO线路可以有三个状态：
     逻辑低电平(和GND相连)
     逻辑高电平(和VCC相连)
     高阻抗,也称为“悬空”(floating)、高阻(Hi-Z)和三态(tri-stated)
   如果某条线路是高阻抗(High-impedance)状态,那么它实际上就从电路中移除了. 这使得多个电路或设备能够共用输出线路,就可以实现通信总线(communication buses). 在需要高阻抗的场合但没能使用高阻态会导致I/O争用(I/O contention)和短路(short-circuit)
   如果信号的状态不确定,则称为悬空(Floating),表示它没有连接到VCC或GND.该信号的电压会“悬空”,和残余电压匹配
+
 #### stm32基础知识
 1. GPIO
 - 每个 GPI/O 端口有:
@@ -256,17 +258,19 @@
 - GPIO的复用
   复用:作为I2C,SPI,USART等通讯接口
 
-2. 时钟
+2.时钟
   - PLL电路(PhaseLockedLoop)
 
-3. ADC
-  - 采样频率
-    ADC挂在APB2总线上, 使用APB2的频率, ADC本身还会有个分频
-  - 转换时间
-    T<sub>conv</sub> = 采样时间 + 12.5个采样周期 
+3.ADC
 
-4. 串口
-  - 波特率和比特率
+- 采样频率
+  ADC挂在APB2总线上, 使用APB2的频率, ADC本身还会有个分频
+- 转换时间
+  T<sub>conv</sub> = 采样时间 + 12.5个采样周期 
+
+4.串口
+
+- 波特率和比特率
     波特率指的码元传输速度, 比特率指的是比特. 当码元个数为2时, 波特率与比特率相等
 
 5. TIM
@@ -279,21 +283,42 @@
           与模式1相反
    - 频率
        f<sub>timer</sub> = f<sub>APB</sub> / (PRESCALER + 1) / (ARR+ 1)
-          
-6. SPI
+6.SPI
    SPI1 -- APB2 -- 最高42MHz
    SPI2/SPI3 -- APB1 -- 最高21MHz
+  
+7.CAN 总线
 
-7. LCD
-  - MCU-LCD屏它与RGB-LCD屏主要区别在于显存的位置：
-        RGB-LCD的显存是由系统内存充当的,因此其大小只受限于系统内存的大小,这样RGB-LCD可以做出较大尺寸,象现在4.3"只能算入门级,而MID中7",10"的屏都开始大量使用.
+- 名词解释
+    参数  | 意思
+    --    | --
+    Prescaler | 预分频，即位时序提到的APB1 peripheral clocks继续分一次频
+    Time Quantum  | 最小时间单位Tq，自动计算出来的，不需要填写
+    Time Quanta in Bit Segment 1  | PBS1段长度
+    Time Quanta in Bit Segment 2  | PBS2段长度
+    ReSynchronization Jump Width  | 重同步跳跃宽度，即位时序提到的SJW
+    Time Triggered Communication Mode | 是否使能时间触发
+    Automatic Bus-Off Management  | 是否使能自动离线管理
+    Automatic Wake-Up Mode  | 是否使能自动唤醒
+    Qutomatic Retransmission  | 是否使能自动重传
+    Receive Fifo Locked Mode  | 是否使能锁定FIFO
+    Transmit Fifo Priority  | 配置报文优先级的判断方法
+    Oprating Mode | 操作模式
+
+7.LCD
+
+- MCU-LCD屏它与RGB-LCD屏主要区别在于显存的位置：
+        RGB-LCD的显存是由系统内存充当的,因此其大小只受限于系统内存的大小,这样RGB-LCD可以做出较大尺寸,现在4.3"只能算入门级,而MID中7",10"的屏都开始大量使用.
         MCU-LCD的设计之初只要考虑单片机的内存较小,因此都是把显存内置在LCD模块内部.然后软件通过专门显示命令来更新显存,因此MCU屏往往不能做得很大.同时显示更新速度也比RGB-LCD慢.
-  - MCU-LCD屏它与RGB-LCD屏量示数据传输模式也有差别：
+- MCU-LCD屏它与RGB-LCD屏量示数据传输模式也有差别：
         RGB屏只需显存组织好数据.启动显示后.LCD-DMA会自动把显存通过RGB接口送到LCM.
-        MCU屏则需要发送画点的命令来修改MCU内部RAM.（即不能直接MCU屏RAM）所以RGB显示速度明显比MCU快,而且播放视频方面,MCU-LCD也比较慢. 
+        MCU屏则需要发送画点的命令来修改MCU内部RAM.（即不能直接MCU屏RAM）所以RGB显示速度明显比MCU快,而且播放视频方面,MCU-LCD也比较慢.
+
 #### 随便什么标题吧
+
 1. stm32 串口
     重写```fputc```和```fgetc```
+
     ```
       int fputc(int ch, FILE *f){
       uint8_t temp[1] = {ch};
@@ -311,3 +336,10 @@
       typedef struct __FILE FILE
       #define echo_printf(format, ...)  printf( format, ##__VA_ARGS__)
     ```
+
+
+#### 记录下遇到的问题
+1. stm32f1 adc/dma模式 实际采集顺序和设定的rank不符合
+
+  - 问题原因:
+    ADC校准可能会影响顺序
